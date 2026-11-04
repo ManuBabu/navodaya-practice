@@ -105,6 +105,15 @@
   .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:-.01em;line-height:1.1}
   .byline{font-size:.86rem;color:var(--muted);font-weight:600;margin-top:3px}
   .byline .by{display:inline-block;font-weight:900;color:#fff;background:var(--brand);padding:1px 9px;border-radius:999px;letter-spacing:.01em}
+  .qfig{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;justify-content:center;margin-bottom:12px}
+  .qfig svg.fig{width:150px;height:150px}
+  .qfig svg.strip{width:100%;height:auto;max-height:130px}
+  .qfig.small-fig svg.fig{width:100px;height:100px}
+  .opts.figs{grid-template-columns:1fr 1fr}
+  .opts.figs .opt{position:relative;justify-content:center;padding:10px}
+  .opts.figs .opt .l{position:absolute;left:8px;top:8px;width:30px;height:30px;background:#fff;z-index:1}
+  .opts.figs .opt svg{width:100%;max-width:130px;height:auto}
+  .mini svg{width:64px;height:64px;vertical-align:middle;margin-left:8px}
   .qtag{display:inline-block;font-size:.72rem;font-weight:800;color:var(--accent)}
   .modal .box{background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%}
 </style>
@@ -168,6 +177,7 @@
     <div class="seclabel" id="secLabel"></div>
     <div id="passageBox"></div>
     <div class="qtext" id="qtext"></div>
+    <div id="qfig" class="qfig hidden"></div>
     <img id="qimg" class="qimg hidden" alt="Question figure">
     <div class="opts" id="opts"></div>
     <div class="nav">
@@ -198,6 +208,7 @@
   </div>
 </div>
 
+<script src="/mat.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const LET = ["A","B","C","D"];
@@ -280,7 +291,23 @@ async function load(){
   renderHome();
 }
 
+/* Mental Ability figures drawn by mat.js: a fresh set every time the app opens */
+let GEN = null;
+function genPool(){
+  if(!GEN && window.MAT){
+    const seed = (Date.now() ^ Math.floor(Math.random()*1e9)) >>> 0;
+    GEN = MAT.batch(24,"easy",seed).concat(MAT.batch(24,"medium",seed+7),MAT.batch(24,"hard",seed+13));
+  }
+  return GEN || [];
+}
+function genFromId(id){
+  // rebuild a generated question from its id (GEN-type-level-seed), for "Practise my mistakes"
+  const m = /^GEN-(\w+)-(easy|medium|hard)-(\d+)$/.exec(id||"");
+  if(!m || !window.MAT || !MAT.TYPES.includes(m[1])) return null;
+  try{ return MAT.make(m[1], +m[3], m[2]); }catch(e){ return null; }
+}
 function poolFor(sec){
+  if(sec.key==="mat") return (DB.mat||[]).concat(genPool());
   if(!sec.passages) return DB[sec.key]||[];
   const byP = {};
   (DB.lang||[]).forEach(q=>{(byP[q.pid]=byP[q.pid]||[]).push(q)});
@@ -294,7 +321,7 @@ function renderHome(){
     const pool = poolFor(s);
     const n = s.passages ? pool.slice(0,s.want).reduce((a,p)=>a+p.qs.length,0) : Math.min(pool.length,s.want);
     total += n;
-    const poolTxt = s.passages ? pool.length+" passages in bank" : pool.length+" in bank";
+    const poolTxt = s.key==="mat" ? "new figures every time" : s.passages ? pool.length+" passages in bank" : pool.length+" in bank";
     list.insertAdjacentHTML("beforeend",'<div class="sec'+(n?'':' off')+'"><b>'+s.name+'</b><span class="small">'+(n?n+" questions · "+poolTxt:"No questions yet")+'</span></div>');
   });
   const mins = Math.round(total*MIN_PER_Q);
@@ -325,12 +352,25 @@ function startTest(){
   const qs=[];
   SECTIONS.forEach(s=>{
     const pool = poolFor(s);
+    if(s.key==="mat"){
+      // up to 8 picture questions from the sheet, the rest drawn fresh and spread evenly over the figure types
+      const fromSheet = leastSeen(DB.mat||[], 8);
+      fromSheet.forEach(q=>qs.push({...shuffleOpts(q),sec:s}));
+      const levels=["easy","medium","hard"], base=(Date.now()^Math.floor(Math.random()*1e9))>>>0;
+      for(let i=0;i<s.want-fromSheet.length;i++){
+        const q = window.MAT ? MAT.make(MAT.TYPES[i%MAT.TYPES.length], (base+i*7919)>>>0, levels[i%3]) : null;
+        if(q) qs.push({...shuffleOpts(q),sec:s});
+      }
+      return;
+    }
     if(s.passages){
       leastSeen(pool,s.want).forEach(p=>p.qs.forEach(q=>qs.push({...shuffleOpts(q),sec:s,passage:p})));
     }else{
       leastSeen(pool,s.want).forEach(q=>qs.push({...shuffleOpts(q),sec:s}));
     }
   });
+  const typeOrder = q => q.gen ? 1+MAT.TYPES.indexOf(q.genType) : 0;
+  qs.sort((a,b)=>SECTIONS.indexOf(a.sec)-SECTIONS.indexOf(b.sec) || (a.sec.key==="mat" ? typeOrder(a)-typeOrder(b) : 0));
   startPaper(qs,"test");
 }
 
@@ -348,7 +388,13 @@ function allQuestions(keys){
   });
   return out;
 }
-function mistakesWaiting(keys){ return allQuestions(keys).filter(x=>wrongIds[x.q.id]).length }
+function withOldGenerated(list,keys){
+  if(!keys.includes("mat")) return list;
+  const have = new Set(list.map(x=>x.q.id)), s = SECTIONS.find(x=>x.key==="mat");
+  Object.keys(wrongIds).filter(id=>id.startsWith("GEN-") && !have.has(id)).forEach(id=>{const q=genFromId(id); if(q) list.push({q,s});});
+  return list;
+}
+function mistakesWaiting(keys){ return withOldGenerated(allQuestions(keys),keys).filter(x=>wrongIds[x.q.id]).length }
 
 function levelOk(q,lvl){ return lvl==="mixed" || (q.lvl||"medium")===lvl }
 function buildQuiz(keys,len,lvl){
@@ -356,7 +402,7 @@ function buildQuiz(keys,len,lvl){
   const order = SECTIONS.map(s=>s.key);
   if(len==="mistakes"){
     // up to 10 questions she got wrong before, in exam section order
-    const picked = shuffle(allQuestions(keys).filter(x=>wrongIds[x.q.id])).slice(0,10);
+    const picked = shuffle(withOldGenerated(allQuestions(keys),keys).filter(x=>wrongIds[x.q.id])).slice(0,10);
     picked.sort((a,b)=>order.indexOf(a.s.key)-order.indexOf(b.s.key) || (a.p&&b.p ? (a.p.id<b.p.id?-1:a.p.id>b.p.id?1:0) : 0));
     return picked.map(x=>({...shuffleOpts(x.q),sec:x.s,passage:x.p}));
   }
@@ -397,7 +443,7 @@ function openQuiz(){
 function renderQuizSetup(){
   $("qChips").innerHTML = SECTIONS.map(s=>{
     const ok=hasQs(s), on=ok&&quizSel.includes(s.key);
-    const info = !ok ? "No questions yet" : s.passages ? poolFor(s).length+" passages" : poolFor(s).length+" in bank";
+    const info = !ok ? "No questions yet" : s.key==="mat" ? "New figures every time" : s.passages ? poolFor(s).length+" passages" : poolFor(s).length+" in bank";
     return '<button class="chip'+(on?' on':'')+'" data-k="'+s.key+'"'+(ok?'':' disabled')+'><span class="box">'+(on?'✓':'')+'</span><span>'+s.name+'<small>'+info+'</small></span></button>';
   }).join("");
   $("qChips").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
@@ -459,13 +505,15 @@ function renderQ(){
     pb.innerHTML='<details class="passage"'+(first?" open":"")+'><summary>Passage: '+esc(q.passage.title||"")+'</summary><p style="white-space:pre-line;margin:8px 0 0">'+esc(q.passage.text)+'</p></details>';
   } else pb.innerHTML="";
   $("qtext").textContent=(T.cur+1)+". "+q.q;
+  $("qfig").innerHTML = q.fig || ""; $("qfig").classList.toggle("hidden",!q.fig);
+  $("secLabel").textContent = q.sec.name + (q.gen ? " · "+q.part : (/^\d{4}/.test(q.src||"") ? " · JNVST "+q.src : ""));
   const im=$("qimg");
   if(q.img){im.src=imgURL(q.img);im.classList.remove("hidden")} else {im.removeAttribute("src");im.classList.add("hidden")}
-  const box=$("opts"); box.innerHTML="";
+  const box=$("opts"); box.innerHTML=""; box.classList.toggle("figs",!!q.gen);
   q.o.forEach((t,i)=>{
     const b=document.createElement("button");
     b.className="opt"+(T.ans[T.cur]===i?" sel":"");
-    b.innerHTML='<span class="l">'+LET[i]+'</span><span>'+esc(t)+'</span>';
+    b.innerHTML='<span class="l">'+LET[i]+'</span>'+(q.gen ? t : '<span>'+esc(t)+'</span>');
     b.onclick=()=>{T.ans[T.cur]=i;renderQ()};
     box.appendChild(b);
   });
@@ -513,7 +561,7 @@ function finish(timeUp){
   T.qs.forEach((q,i)=>{
     const g=groups[q.sec.group]=groups[q.sec.group]||{n:0,c:0};
     g.n++; if(T.ans[i]===q.a) g.c++;
-    seen[q.id]=(seen[q.id]||0)+1;
+    if(!q.gen) seen[q.id]=(seen[q.id]||0)+1;
     if(q.passage) seen[q.passage.id]=(seen[q.passage.id]||0)+0.2;
     if(T.ans[i]===q.a) delete wrongIds[q.id]; else wrongIds[q.id]=true;
   });
@@ -540,6 +588,12 @@ function finish(timeUp){
   const wrong=T.qs.map((q,i)=>({q,i})).filter(x=>T.ans[x.i]!==x.q.a);
   $("revHead").textContent = wrong.length ? "Questions to go over ("+wrong.length+")" : "All correct!";
   $("review").innerHTML = wrong.map(({q,i})=>{
+    if(q.gen){
+      const yourFig = T.ans[i]===null ? "Left blank" : LET[T.ans[i]]+'<span class="mini">'+q.o[T.ans[i]]+'</span>';
+      return '<div class="rev"><div class="q">'+(i+1)+". "+esc(q.q)+'</div>'+(q.fig?'<div class="qfig small-fig">'+q.fig+'</div>':'')+
+        '<div class="your">Her answer: '+yourFig+'</div><div class="right">Correct: '+LET[q.a]+'<span class="mini">'+q.o[q.a]+'</span></div>'+
+        '<div class="ex">'+esc(q.ex)+'</div></div>';
+    }
     const yours = T.ans[i]===null ? "Left blank" : LET[T.ans[i]]+(q.img?"":". "+esc(q.o[T.ans[i]]));
     return '<div class="rev"><div class="q">'+(i+1)+". "+esc(q.q)+'</div>'+
       (q.img?'<img src="'+imgURL(q.img)+'" alt="">':'')+
