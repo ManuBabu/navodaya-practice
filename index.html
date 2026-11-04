@@ -35,10 +35,12 @@
   .small{font-size:.86rem;color:var(--muted)}
   .note{background:#fff8e6;border:1px solid #f3dfa8;border-radius:12px;padding:10px 14px;font-size:.92rem;color:#5b4a1c;margin:10px 0}
   .err{background:var(--bad-soft);border:1px solid #f5c7b2;color:var(--bad)}
-  .sections{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
-  .sec{border:1.5px solid color-mix(in srgb,var(--c) 22%,#fff);border-radius:14px;padding:10px 12px;background:color-mix(in srgb,var(--c) 7%,#fff)}
-  .sec b{display:block;color:var(--c)}
-  .si{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);font-size:16px;margin-bottom:4px}
+  .sections{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:8px 0 10px}
+  .sec{border:1.5px solid color-mix(in srgb,var(--c) 22%,#fff);border-radius:12px;padding:7px 9px;background:color-mix(in srgb,var(--c) 7%,#fff);
+    display:grid;grid-template-columns:28px 1fr;column-gap:8px;align-items:center}
+  .sec b{display:block;color:var(--c);font-size:.95rem;line-height:1.2}
+  .sec .small{grid-column:2;font-size:.75rem;line-height:1.25}
+  .si{grid-row:span 2;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--c);font-size:15px}
   .sec.off{opacity:.55}
   .hidden{display:none!important}
   /* test */
@@ -84,8 +86,9 @@
   /* quick quiz */
   button.card{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
   button.card:disabled{opacity:.5;cursor:default}
-  .qq{display:flex;gap:14px;align-items:center}
-  .qq .ic{flex:0 0 46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:var(--accent);box-shadow:0 3px 0 rgba(0,0,0,.15)}
+  .qq{display:flex;gap:12px;align-items:center;padding:8px 12px;margin:8px 0}
+  .qq b{display:inline!important}
+  .qq .ic{flex:0 0 36px;height:36px;font-size:1.1rem!important;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:var(--accent);box-shadow:0 3px 0 rgba(0,0,0,.15)}
   .last .row{justify-content:space-between;margin-top:4px}
   .last .big-score{font-size:2rem;font-weight:900;color:var(--brand);line-height:1}
   .last .big-score span{font-size:.95rem;color:var(--muted);font-weight:700}
@@ -111,10 +114,10 @@
   .lvl b{display:block;font-size:.95rem}
   .lvl.on{border-color:var(--brand);background:var(--brand-soft)}
   .lvl:disabled{opacity:.45;cursor:default}
-  .brand{display:flex;align-items:center;gap:12px;margin:-16px -16px 14px;padding:20px 18px 22px;color:#fff;
+  .brand{display:flex;align-items:center;gap:12px;margin:-16px -16px 10px;padding:12px 16px 14px;color:#fff;
     background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:0 0 24px 24px;box-shadow:0 6px 16px rgba(67,56,202,.25)}
   .brand .logo{border-radius:15px;box-shadow:0 3px 8px rgba(0,0,0,.25);flex:0 0 auto}
-  .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:-.01em;line-height:1.1;color:#fff}
+  .brand h1{margin:0;font-size:1.4rem;font-weight:900;letter-spacing:-.01em;line-height:1.1;color:#fff}
   .byline{font-size:.86rem;color:#e0e7ff;font-weight:600;margin-top:4px}
   .byline .by{display:inline-block;font-weight:900;color:#fff;background:var(--accent);padding:1px 10px;border-radius:999px;letter-spacing:.01em}
   .qfig{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;justify-content:center;margin-bottom:12px}
@@ -127,7 +130,8 @@
   .opts.figs .opt.sel .l{background:var(--brand);border-color:var(--brand);color:#fff}
   .opts.figs .opt svg{width:100%;max-width:130px;height:auto}
   .mini svg{width:64px;height:64px;vertical-align:middle;margin-left:8px}
-  .hello{font-size:1.15rem;font-weight:800;margin:2px 0 2px}
+  .hello{font-size:1.1rem;font-weight:800;margin:0}
+  #helloSub{margin:0 0 6px}
   .fl{display:block;font-weight:800;margin:12px 0 6px}
   .inp{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
   .inp:focus{outline:none;border-color:var(--brand)}
@@ -161,7 +165,7 @@
 
   <section id="home">
     <div class="brand">
-      <svg class="logo" width="58" height="58" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="tnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4aa3ff"/><stop offset="1" stop-color="#2459c7"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#tnSky)"/><circle cx="44" cy="56" r="32.0" fill="#fff"/><circle cx="44" cy="56" r="24.0" fill="#e5484d"/><circle cx="44" cy="56" r="16.0" fill="#fff"/><circle cx="44" cy="56" r="8.0" fill="#e5484d"/><path d="M45 55 L80 20" stroke="#1f2933" stroke-width="4.5" stroke-linecap="round"/><polygon points="73.6,26.4 76.5,13.6 78.6,21.4" fill="#ffc845"/><polygon points="73.6,26.4 86.4,23.5 78.6,21.4" fill="#ffc845"/><polygon points="78.0,63.0 80.9,70.0 88.5,70.6 82.7,75.5 84.5,82.9 78.0,79.0 71.5,82.9 73.3,75.5 67.5,70.6 75.1,70.0" fill="#ffc845" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <svg class="logo" width="48" height="48" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="tnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4aa3ff"/><stop offset="1" stop-color="#2459c7"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#tnSky)"/><circle cx="44" cy="56" r="32.0" fill="#fff"/><circle cx="44" cy="56" r="24.0" fill="#e5484d"/><circle cx="44" cy="56" r="16.0" fill="#fff"/><circle cx="44" cy="56" r="8.0" fill="#e5484d"/><path d="M45 55 L80 20" stroke="#1f2933" stroke-width="4.5" stroke-linecap="round"/><polygon points="73.6,26.4 76.5,13.6 78.6,21.4" fill="#ffc845"/><polygon points="73.6,26.4 86.4,23.5 78.6,21.4" fill="#ffc845"/><polygon points="78.0,63.0 80.9,70.0 88.5,70.6 82.7,75.5 84.5,82.9 78.0,79.0 71.5,82.9 73.3,75.5 67.5,70.6 75.1,70.0" fill="#ffc845" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <div><h1>Target Navodaya</h1><div class="byline"><span class="by">by Manu</span> · JNVST Class 6 practice</div></div>
     </div>
     <p class="hello" id="hello"></p>
@@ -171,11 +175,11 @@
 
     <button class="card qq" id="qqBtn" disabled>
       <span class="ic">⚡</span>
-      <span class="grow"><b>Quick quiz</b><span class="small">10 or 15 minutes · pick the sections</span></span>
+      <span class="grow"><b>Quick quiz</b> <span class="small">10–15 min</span></span>
       <span class="chev">›</span>
     </button>
 
-    <div class="card">
+    <div class="card" style="padding:12px 14px">
       <b>Full test</b>
       <div class="small" id="testInfo">One timer for the whole paper. You can move between questions freely, just like the real exam.</div>
       <div class="sections" id="secList"></div>
@@ -362,12 +366,12 @@ function renderHome(){
     const pool = poolFor(s);
     const n = s.passages ? pool.slice(0,s.want).reduce((a,p)=>a+p.qs.length,0) : Math.min(pool.length,s.want);
     total += n;
-    const poolTxt = s.key==="mat" ? "new figures every time" : s.passages ? pool.length+" passages in bank" : pool.length+" in bank";
-    list.insertAdjacentHTML("beforeend",'<div class="sec'+(n?'':' off')+'" style="--c:'+s.color+'"><span class="si">'+s.icon+'</span><b>'+s.name+'</b><span class="small">'+(n?n+" questions · "+poolTxt:"No questions yet")+'</span></div>');
+    const poolTxt = s.key==="mat" ? "new each time" : s.passages ? pool.length+" passages" : pool.length+" in bank";
+    list.insertAdjacentHTML("beforeend",'<div class="sec'+(n?'':' off')+'" style="--c:'+s.color+'"><span class="si">'+s.icon+'</span><b>'+s.name+'</b><span class="small">'+(n?n+" Qs · "+poolTxt:"No questions yet")+'</span></div>');
   });
   const mins = Math.round(total*MIN_PER_Q);
   $("testInfo").textContent = total
-    ? total+" questions · "+mins+" minutes"+(total>=80?" (the full 2-hour paper)":"")+". One timer for the whole paper, and she can move between questions freely, like in the real exam."
+    ? total+" questions · "+(mins%60===0&&mins>=60 ? (mins/60)+(mins===60?" hour":" hours") : mins+" minutes")+" · one timer, like the real exam"
     : "No questions in the sheet yet.";
   $("startBtn").disabled = !total;
   $("qqBtn").disabled = !total;

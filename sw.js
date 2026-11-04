@@ -1,4 +1,4 @@
-const CACHE = "navodaya-v10";
+const CACHE = "navodaya-v11";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/mat.js", "/icon-sky-192.png", "/icon-sky-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
