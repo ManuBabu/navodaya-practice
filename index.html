@@ -114,6 +114,15 @@
   .opts.figs .opt .l{position:absolute;left:8px;top:8px;width:30px;height:30px;background:#fff;z-index:1}
   .opts.figs .opt svg{width:100%;max-width:130px;height:auto}
   .mini svg{width:64px;height:64px;vertical-align:middle;margin-left:8px}
+  .hello{font-size:1.15rem;font-weight:800;margin:2px 0 2px}
+  .fl{display:block;font-weight:800;margin:12px 0 6px}
+  .inp{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+  .inp:focus{outline:none;border-color:var(--brand)}
+  .phone{display:flex;align-items:center;gap:8px}.phone span{font-weight:800;color:var(--muted)}
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;color:#374151;margin:16px 0 8px;line-height:1.4}
+  .consent input{width:22px;height:22px;flex:0 0 22px;margin-top:1px;accent-color:var(--brand)}
+  .ferr{color:var(--bad);font-weight:700;font-size:.9rem;min-height:1.2em;margin-bottom:8px}
+  .linkbtn{appearance:none;border:0;background:none;color:var(--brand);font:inherit;font-weight:800;text-decoration:underline;cursor:pointer;padding:0}
   .qtag{display:inline-block;font-size:.72rem;font-weight:800;color:var(--accent)}
   .modal .box{background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%}
 </style>
@@ -122,11 +131,27 @@
 <div class="wrap">
 
   <!-- HOME -->
+  <!-- WELCOME (first open) -->
+  <section id="welcome" class="hidden">
+    <div class="brand" id="welcomeBrand"></div>
+    <h2 style="margin-top:6px">Welcome! Let's get started</h2>
+    <form id="welcomeForm" class="card" autocomplete="on" novalidate>
+      <label class="fl" for="wName">Student's name</label>
+      <input id="wName" class="inp" maxlength="40" autocomplete="name" placeholder="e.g. Ananya" required>
+      <label class="fl" for="wPhone">Parent's mobile number <span class="small">(optional)</span></label>
+      <div class="phone"><span>+91</span><input id="wPhone" class="inp" inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="10-digit number"></div>
+      <label class="consent"><input type="checkbox" id="wConsent"> <span>I am the parent or guardian (or have their permission), and I agree that Target Navodaya can save this name and number to keep track of practice.</span></label>
+      <div class="ferr" id="wErr"></div>
+      <button class="btn big" type="submit">Start practising</button>
+    </form>
+  </section>
+
   <section id="home">
     <div class="brand">
       <svg class="logo" width="58" height="58" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="tnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4aa3ff"/><stop offset="1" stop-color="#2459c7"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#tnSky)"/><circle cx="44" cy="56" r="32.0" fill="#fff"/><circle cx="44" cy="56" r="24.0" fill="#e5484d"/><circle cx="44" cy="56" r="16.0" fill="#fff"/><circle cx="44" cy="56" r="8.0" fill="#e5484d"/><path d="M45 55 L80 20" stroke="#1f2933" stroke-width="4.5" stroke-linecap="round"/><polygon points="73.6,26.4 76.5,13.6 78.6,21.4" fill="#ffc845"/><polygon points="73.6,26.4 86.4,23.5 78.6,21.4" fill="#ffc845"/><polygon points="78.0,63.0 80.9,70.0 88.5,70.6 82.7,75.5 84.5,82.9 78.0,79.0 71.5,82.9 73.3,75.5 67.5,70.6 75.1,70.0" fill="#ffc845" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <div><h1>Target Navodaya</h1><div class="byline"><span class="by">by Manu</span> · JNVST Class 6 practice</div></div>
     </div>
+    <p class="hello" id="hello"></p>
     <p class="sub">A full JNVST paper under exam conditions, with fresh questions each time.</p>
 
     <div id="loadMsg" class="note">Loading questions…</div>
@@ -146,8 +171,9 @@
 
     <button class="btn ghost hidden" id="installBtn" style="width:100%">Install as app</button>
 
-    <h2>Past results</h2>
+    <h2 id="histHead">Past results</h2>
     <div id="history" class="card"><p class="small" style="margin:0">No tests taken yet.</p></div>
+    <p class="small" style="text-align:center">Not you? <button class="linkbtn" id="changeUser">Change name</button></p>
   </section>
 
   <!-- QUICK QUIZ SETUP -->
@@ -485,6 +511,7 @@ function startQuiz(){
 
 function startPaper(qs,kind,minutes){
   if(!qs.length) return;
+  track(kind==="quiz"?"quiz_start":"test_start", qs.length+" questions");
   const total = (minutes || Math.round(qs.length*MIN_PER_Q))*60;
   T={qs,kind,ans:new Array(qs.length).fill(null),cur:0,total,started:Date.now()};
   saveLive();
@@ -494,7 +521,7 @@ function startPaper(qs,kind,minutes){
 }
 
 /* ---------- test screen ---------- */
-function show(id){["home","quiz","test","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id))}
+function show(id){["welcome","home","quiz","test","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id))}
 /* ---------- keep the test safe if the phone closes the app ---------- */
 function saveLive(){
   if(!T) return;
@@ -609,6 +636,8 @@ function finish(timeUp){
 
   history.unshift({d:Date.now(),kind:T.kind||"test",parts,marks:totC*MARK,max:totN*MARK,mins:Math.round(used/60),pass:allPass});
   history=history.slice(0,50); store.set("nv_hist",history);
+  const summary = fmt(totC*MARK)+"/"+fmt(totN*MARK)+(allPass?" PASS":" FAIL")+" · "+parts.map(p=>short(p.name)+" "+p.c+"/"+p.n).join(", ")+" · "+Math.round(used/60)+" min";
+  track(T.kind==="quiz"?"quiz_finish":"test_finish", summary, (T.kind==="quiz"?"Quiz ":"Full test ")+summary+" · "+new Date().toLocaleDateString("en-IN",{day:"numeric",month:"short"}));
 
   const wrong=T.qs.map((q,i)=>({q,i})).filter(x=>T.ans[x.i]!==x.q.a);
   $("revHead").textContent = wrong.length ? "Questions to go over ("+wrong.length+")" : "All correct!";
@@ -644,6 +673,53 @@ const short=n=>({"Mental Ability & EVS":"MAT+EVS","Arithmetic":"Maths","Language
 const fmt=x=>(Math.round(x*100)/100).toString();
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 
+/* ---------- who is practising ---------- */
+// Paste the web-app address of the private tracking sheet here (from Apps Script > Deploy). Empty = tracking off.
+const TRACK_URL = "";
+let profile = store.get("nv_profile", null);
+function deviceId(){
+  let id = store.get("nv_device", null);
+  if(!id){ id = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); store.set("nv_device", id); }
+  return id;
+}
+function track(event, details, score){
+  if(!TRACK_URL || !profile) return;
+  const body = JSON.stringify({event, details:details||"", score:score||"", name:profile.name, phone:profile.phone||"", device:deviceId()});
+  try{
+    fetch(TRACK_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body,keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
+function greet(){
+  if(!profile) return;
+  $("hello").textContent = "Hi " + profile.name + " 👋";
+  $("histHead").textContent = "Hi " + profile.name + ", here's your practice history";
+}
+function openWelcome(){
+  $("welcomeBrand").innerHTML = document.querySelector("#home .brand").innerHTML;
+  $("wName").value = profile ? profile.name : "";
+  $("wPhone").value = profile ? (profile.phone||"") : "";
+  $("wConsent").checked = !!profile;
+  $("wErr").textContent = "";
+  show("welcome"); window.scrollTo(0,0);
+}
+$("welcomeForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const name = $("wName").value.replace(/\s+/g," ").trim();
+  const phone = $("wPhone").value.replace(/\D/g,"");
+  if(name.length < 2) { $("wErr").textContent = "Please enter the student's name."; return; }
+  if(phone && !/^[6-9]\d{9}$/.test(phone)) { $("wErr").textContent = "Please check the mobile number (10 digits), or leave it empty."; return; }
+  if(!$("wConsent").checked) { $("wErr").textContent = "Please tick the box to agree before starting."; return; }
+  const first = !profile;
+  profile = {name, phone, since: profile ? profile.since : Date.now()};
+  store.set("nv_profile", profile);
+  greet(); show("home"); window.scrollTo(0,0);
+  track(first ? "signup" : "profile_change", phone ? "with mobile" : "no mobile");
+});
+$("wPhone").addEventListener("input", e=>{ e.target.value = e.target.value.replace(/\D/g,"").slice(0,10); });
+$("changeUser").onclick = openWelcome;
+// "still here" note once a minute while the app is open on screen, so the sheet can show who is online
+setInterval(()=>{ if(!document.hidden) track("ping"); }, 60000);
+
 /* ---------- events ---------- */
 $("startBtn").onclick=startTest;
 $("qqBtn").onclick=openQuiz;
@@ -664,7 +740,7 @@ $("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.promp
 if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
 
 renderHistory();
-resumeLive();
+if(profile){ greet(); if(!resumeLive()) track("open"); } else { openWelcome(); }
 load();
 </script>
 </body>
