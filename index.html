@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f6f5c">
-<title>Navodaya Practice</title>
+<title>Lakshya Navodaya</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -96,6 +96,15 @@
   .lens{display:grid;gap:8px;margin:8px 0}
   .len b{display:block}
   .len.on{border-color:var(--brand);background:var(--brand-soft)}
+  .lvls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+  .lvl{appearance:none;font:inherit;color:var(--ink);cursor:pointer;border:1.5px solid var(--line);border-radius:12px;padding:10px 4px;background:#fff;text-align:center}
+  .lvl b{display:block;font-size:.95rem}
+  .lvl.on{border-color:var(--brand);background:var(--brand-soft)}
+  .lvl:disabled{opacity:.45;cursor:default}
+  .brand{display:flex;align-items:center;gap:12px;margin:4px 0 10px}
+  .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:-.01em;line-height:1.1}
+  .byline{font-size:.86rem;color:var(--muted);font-weight:600;margin-top:3px}
+  .byline .by{display:inline-block;font-weight:900;color:#fff;background:var(--brand);padding:1px 9px;border-radius:999px;letter-spacing:.01em}
   .qtag{display:inline-block;font-size:.72rem;font-weight:800;color:var(--accent)}
   .modal .box{background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%}
 </style>
@@ -105,7 +114,10 @@
 
   <!-- HOME -->
   <section id="home">
-    <h1>Navodaya Practice</h1>
+    <div class="brand">
+      <svg class="logo" width="58" height="58" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="14" fill="#e8833a"/><path d="M19 13v29h20" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M25 32L42 15" stroke="#1f6f5c" stroke-width="4" stroke-linecap="round"/><path d="M43 14l-8 .8 7.2 7.2z" fill="#1f6f5c"/></svg>
+      <div><h1>Lakshya Navodaya</h1><div class="byline"><span class="by">by Manu</span> · JNVST Class 6 practice</div></div>
+    </div>
     <p class="sub">A full JNVST paper under exam conditions, with fresh questions each time.</p>
 
     <div id="loadMsg" class="note">Loading questions…</div>
@@ -138,6 +150,8 @@
     <div class="chips" id="qChips"></div>
     <div class="label">Length</div>
     <div class="lens" id="qLens"></div>
+    <div class="label" id="qLvlLabel">Level</div>
+    <div class="lvls" id="qLvls"></div>
     <button class="btn big" id="qStart" style="margin-top:10px">Start quiz</button>
     <p class="small" id="qInfo" style="text-align:center"></p>
   </section>
@@ -234,7 +248,8 @@ function tableToObjects(t){
 function cleanQuestion(o){
   return {id:o["id"],src:o["source"],pid:o["passage id"]||"",q:o["question"],img:o["image link"]||"",
     o:[o["option a"],o["option b"],o["option c"],o["option d"]],
-    a:"ABCD".indexOf((o["answer"]||"").toUpperCase().charAt(0)),ex:o["explanation"]||""};
+    a:"ABCD".indexOf((o["answer"]||"").toUpperCase().charAt(0)),ex:o["explanation"]||"",
+    lvl:({e:"easy",h:"hard"})[(o["difficulty"]||"").trim().toLowerCase().charAt(0)]||"medium"};
 }
 async function fetchAll(){
   const out={};
@@ -321,7 +336,7 @@ function startTest(){
 
 /* ---------- quick quiz ---------- */
 let wrongIds = store.get("nv_wrong",{});        // id -> true for questions answered wrong and not yet put right
-let quizSel = null, quizLen = 10;
+let quizSel = null, quizLen = 10, quizLvl = "mixed";
 const hasQs = s => poolFor(s).length>0;
 
 function allQuestions(keys){
@@ -335,30 +350,42 @@ function allQuestions(keys){
 }
 function mistakesWaiting(keys){ return allQuestions(keys).filter(x=>wrongIds[x.q.id]).length }
 
-function buildQuiz(keys,len){
+function levelOk(q,lvl){ return lvl==="mixed" || (q.lvl||"medium")===lvl }
+function buildQuiz(keys,len,lvl){
+  lvl = lvl || "mixed";
+  const order = SECTIONS.map(s=>s.key);
   if(len==="mistakes"){
     // up to 10 questions she got wrong before, in exam section order
     const picked = shuffle(allQuestions(keys).filter(x=>wrongIds[x.q.id])).slice(0,10);
-    const order = SECTIONS.map(s=>s.key);
     picked.sort((a,b)=>order.indexOf(a.s.key)-order.indexOf(b.s.key) || (a.p&&b.p ? (a.p.id<b.p.id?-1:a.p.id>b.p.id?1:0) : 0));
     return picked.map(x=>({...shuffleOpts(x.q),sec:x.s,passage:x.p}));
   }
   const n = len===15 ? 10 : 7;
   const secs = SECTIONS.filter(s=>keys.includes(s.key));
   const lang = secs.find(s=>s.passages), others = secs.filter(s=>!s.passages);
-  // Language comes in whole passages of 5; share the rest across the other sections
-  let langPassages = 0;
-  if(lang) langPassages = others.length ? 1 : (n>=10 ? 2 : 1);
-  let rest = Math.max(0, n - langPassages*5);
-  const counts = others.map(()=>0);
-  for(let i=0;i<rest;i++) counts[i%Math.max(1,others.length)]++;
   const qs=[];
-  others.forEach((s,i)=>{
-    leastSeen(poolFor(s),counts[i]).forEach(q=>qs.push({...shuffleOpts(q),sec:s}));
-  });
-  if(lang) leastSeen(poolFor(lang),langPassages).forEach(p=>p.qs.forEach(q=>qs.push({...shuffleOpts(q),sec:lang,passage:p})));
-  // keep exam section order
-  const order = SECTIONS.map(s=>s.key);
+  // Language: whole passages, keeping only the questions at the chosen level
+  let langCount = 0;
+  if(lang){
+    const target = others.length ? 5 : (n>=10 ? 10 : 5);
+    const passages = poolFor(lang).map(p=>({...p,qs:p.qs.filter(q=>levelOk(q,lvl))})).filter(p=>p.qs.length);
+    for(const p of leastSeen(passages,passages.length)){
+      if(langCount>=target) break;
+      if(langCount && langCount+p.qs.length>target+2) continue;   // don't overshoot the quiz length
+      p.qs.forEach(q=>qs.push({...shuffleOpts(q),sec:lang,passage:p}));
+      langCount += p.qs.length;
+    }
+  }
+  // share the remaining questions across the other sections
+  const pools = others.map(s=>poolFor(s).filter(q=>levelOk(q,lvl)));
+  const counts = others.map(()=>0);
+  let rest = Math.max(0, n - langCount), guard = 0;
+  while(rest>0 && guard++<100){
+    let added=false;
+    others.forEach((s,i)=>{ if(rest>0 && counts[i]<pools[i].length){counts[i]++;rest--;added=true} });
+    if(!added) break;
+  }
+  others.forEach((s,i)=>leastSeen(pools[i],counts[i]).forEach(q=>qs.push({...shuffleOpts(q),sec:s})));
   return qs.sort((a,b)=>order.indexOf(a.sec.key)-order.indexOf(b.sec.key));
 }
 
@@ -388,14 +415,25 @@ function renderQuizSetup(){
   $("qLens").querySelectorAll(".len").forEach(b=>b.onclick=()=>{
     quizLen = b.dataset.v==="mistakes" ? "mistakes" : +b.dataset.v; renderQuizSetup();
   });
-  const preview = quizSel.length ? buildQuiz(quizSel,quizLen).length : 0;
+  // level: hidden for "Practise my mistakes"
+  const showLvl = quizLen!=="mistakes";
+  $("qLvlLabel").classList.toggle("hidden",!showLvl); $("qLvls").classList.toggle("hidden",!showLvl);
+  const all = allQuestions(quizSel);
+  const cnt = l => all.filter(x=>levelOk(x.q,l)).length;
+  if(quizLvl!=="mixed" && !cnt(quizLvl)) quizLvl="mixed";
+  $("qLvls").innerHTML = [["mixed","Mixed"],["easy","Easy"],["medium","Medium"],["hard","Hard"]].map(([v,t])=>{
+    const c=cnt(v);
+    return '<button class="lvl'+(quizLvl===v?' on':'')+'" data-l="'+v+'"'+(c?'':' disabled')+'><b>'+t+'</b><span class="small">'+c+'</span></button>';
+  }).join("");
+  $("qLvls").querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{quizLvl=b.dataset.l;renderQuizSetup()});
+  const preview = quizSel.length ? buildQuiz(quizSel,quizLen,quizLvl).length : 0;
   $("qStart").disabled = !preview;
   $("qStart").textContent = preview ? "Start quiz · "+preview+" questions" : "Pick at least one section";
   $("qInfo").textContent = preview ? quizMinutes(preview)+" minutes on the timer, about the real exam's pace of 1.5 minutes per question." : "";
 }
 function quizMinutes(count){ return quizLen==="mistakes" ? Math.round(count*MIN_PER_Q) : quizLen }
 function startQuiz(){
-  const qs = buildQuiz(quizSel,quizLen);
+  const qs = buildQuiz(quizSel,quizLen,quizLvl);
   startPaper(qs, "quiz", quizMinutes(qs.length));
 }
 
