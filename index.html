@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f6f5c">
+<meta name="theme-color" content="#4f46e5">
 <title>Target Navodaya</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon-sky-192.png">
 <link rel="apple-touch-icon" href="/icon-sky-192.png">
 <style>
   :root{
-    --bg:#fbf7f0; --card:#fff; --ink:#1f2933; --muted:#6b7280; --line:#e7e1d6;
-    --brand:#1f6f5c; --brand-soft:#e3f1ec; --accent:#e8833a; --accent-soft:#fdeee2;
+    --bg:#f7f5ff; --card:#fff; --ink:#1e1b4b; --muted:#6b7280; --line:#e5e7f5;
+    --brand:#4f46e5; --brand-soft:#e0e7ff; --accent:#f97316; --accent-soft:#ffedd5;
+    --mat:#8b5cf6; --evs:#16a34a; --arith:#2563eb; --lang:#f97316;
     --good:#1f8a4c; --good-soft:#e2f4ea; --bad:#c2410c; --bad-soft:#fde8de;
   }
   *{box-sizing:border-box}
@@ -22,6 +23,9 @@
   .sub{color:var(--muted);margin:0 0 12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
   .btn{appearance:none;border:0;border-radius:12px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;background:var(--brand);color:#fff}
+  .btn{box-shadow:0 3px 0 rgba(0,0,0,.18)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .btn.ghost{box-shadow:none}
   .btn.big{width:100%;padding:16px;font-size:1.15rem}
   .btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
   .btn.warn{background:var(--accent)}
@@ -32,8 +36,9 @@
   .note{background:#fff8e6;border:1px solid #f3dfa8;border-radius:12px;padding:10px 14px;font-size:.92rem;color:#5b4a1c;margin:10px 0}
   .err{background:var(--bad-soft);border:1px solid #f5c7b2;color:var(--bad)}
   .sections{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
-  .sec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
-  .sec b{display:block}
+  .sec{border:1.5px solid color-mix(in srgb,var(--c) 22%,#fff);border-radius:14px;padding:10px 12px;background:color-mix(in srgb,var(--c) 7%,#fff)}
+  .sec b{display:block;color:var(--c)}
+  .si{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);font-size:16px;margin-bottom:4px}
   .sec.off{opacity:.55}
   .hidden{display:none!important}
   /* test */
@@ -54,7 +59,7 @@
   .nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
   .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:8px}
   .grid button{aspect-ratio:1;border-radius:50%;border:1.5px solid #b9b2a5;background:#fff;font:inherit;font-size:.75rem;font-weight:700;cursor:pointer;padding:0;color:var(--ink)}
-  .grid button.done{background:var(--brand);border-color:var(--brand);color:#fff}
+  .grid button.done{background:var(--c,var(--brand));border-color:var(--c,var(--brand));color:#fff}
   .grid button.cur{outline:3px solid var(--accent);outline-offset:1px}
   .gridhead{font-size:.8rem;font-weight:800;color:var(--muted);margin-top:14px}
   /* results */
@@ -80,7 +85,12 @@
   button.card{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
   button.card:disabled{opacity:.5;cursor:default}
   .qq{display:flex;gap:14px;align-items:center}
-  .qq .ic{flex:0 0 46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:var(--accent-soft)}
+  .qq .ic{flex:0 0 46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:var(--accent);box-shadow:0 3px 0 rgba(0,0,0,.15)}
+  .last .row{justify-content:space-between;margin-top:4px}
+  .last .big-score{font-size:2rem;font-weight:900;color:var(--brand);line-height:1}
+  .last .big-score span{font-size:.95rem;color:var(--muted);font-weight:700}
+  .secbadge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;color:#fff;background:var(--c);font-size:.78rem;font-weight:800;letter-spacing:.03em}
+  .secbadge i{font-style:normal;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);font-size:12px}
   .qq b{display:block}
   .qq .chev{font-size:1.5rem;color:var(--muted)}
   .back{appearance:none;border:0;background:none;padding:4px 0;font:inherit;color:var(--brand);font-weight:700;cursor:pointer}
@@ -90,8 +100,8 @@
   .chip{display:flex;gap:10px;align-items:center;font-weight:700}
   .chip .box{width:22px;height:22px;border-radius:6px;border:2px solid #b9b2a5;display:grid;place-items:center;color:#fff;font-size:14px;flex:0 0 22px}
   .chip small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
-  .chip.on{border-color:var(--brand);background:var(--brand-soft)}
-  .chip.on .box{background:var(--brand);border-color:var(--brand)}
+  .chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff)}
+  .chip.on .box{background:var(--c);border-color:var(--c)}
   .chip:disabled,.len:disabled{opacity:.45;cursor:default}
   .lens{display:grid;gap:8px;margin:8px 0}
   .len b{display:block}
@@ -101,10 +111,12 @@
   .lvl b{display:block;font-size:.95rem}
   .lvl.on{border-color:var(--brand);background:var(--brand-soft)}
   .lvl:disabled{opacity:.45;cursor:default}
-  .brand{display:flex;align-items:center;gap:12px;margin:4px 0 10px}
-  .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:-.01em;line-height:1.1}
-  .byline{font-size:.86rem;color:var(--muted);font-weight:600;margin-top:3px}
-  .byline .by{display:inline-block;font-weight:900;color:#fff;background:var(--brand);padding:1px 9px;border-radius:999px;letter-spacing:.01em}
+  .brand{display:flex;align-items:center;gap:12px;margin:-16px -16px 14px;padding:20px 18px 22px;color:#fff;
+    background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:0 0 24px 24px;box-shadow:0 6px 16px rgba(67,56,202,.25)}
+  .brand .logo{border-radius:15px;box-shadow:0 3px 8px rgba(0,0,0,.25);flex:0 0 auto}
+  .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:-.01em;line-height:1.1;color:#fff}
+  .byline{font-size:.86rem;color:#e0e7ff;font-weight:600;margin-top:4px}
+  .byline .by{display:inline-block;font-weight:900;color:#fff;background:var(--accent);padding:1px 10px;border-radius:999px;letter-spacing:.01em}
   .qfig{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;justify-content:center;margin-bottom:12px}
   .qfig svg.fig{width:150px;height:150px}
   .qfig svg.strip{width:100%;height:auto;max-height:130px}
@@ -112,6 +124,7 @@
   .opts.figs{grid-template-columns:1fr 1fr}
   .opts.figs .opt{position:relative;justify-content:center;padding:10px}
   .opts.figs .opt .l{position:absolute;left:8px;top:8px;width:30px;height:30px;background:#fff;z-index:1}
+  .opts.figs .opt.sel .l{background:var(--brand);border-color:var(--brand);color:#fff}
   .opts.figs .opt svg{width:100%;max-width:130px;height:auto}
   .mini svg{width:64px;height:64px;vertical-align:middle;margin-left:8px}
   .hello{font-size:1.15rem;font-weight:800;margin:2px 0 2px}
@@ -152,9 +165,15 @@
       <div><h1>Target Navodaya</h1><div class="byline"><span class="by">by Manu</span> · JNVST Class 6 practice</div></div>
     </div>
     <p class="hello" id="hello"></p>
-    <p class="sub">A full JNVST paper under exam conditions, with fresh questions each time.</p>
+    <p class="sub" id="helloSub">A full JNVST paper under exam conditions, with fresh questions each time.</p>
 
     <div id="loadMsg" class="note">Loading questions…</div>
+
+    <button class="card qq" id="qqBtn" disabled>
+      <span class="ic">⚡</span>
+      <span class="grow"><b>Quick quiz</b><span class="small">10 or 15 minutes · pick the sections</span></span>
+      <span class="chev">›</span>
+    </button>
 
     <div class="card">
       <b>Full test</b>
@@ -163,13 +182,9 @@
       <button class="btn big" id="startBtn" disabled>Start test</button>
     </div>
 
-    <button class="card qq" id="qqBtn" disabled>
-      <span class="ic">⚡</span>
-      <span class="grow"><b>Quick quiz</b><span class="small">10 or 15 minutes · pick the sections</span></span>
-      <span class="chev">›</span>
-    </button>
-
     <button class="btn ghost hidden" id="installBtn" style="width:100%">Install as app</button>
+
+    <div class="card last hidden" id="lastCard"></div>
 
     <h2 id="histHead">Past results</h2>
     <div id="history" class="card"><p class="small" style="margin:0">No tests taken yet.</p></div>
@@ -244,10 +259,10 @@ const MIN_PER_Q = 1.5;        // 120 minutes for 80 questions
 
 /* the real paper's sections, in order */
 const SECTIONS = [
-  {key:"mat",   name:"Mental Ability", want:20, group:"Mental Ability & EVS"},
-  {key:"evs",   name:"EVS",            want:20, group:"Mental Ability & EVS"},
-  {key:"arith", name:"Arithmetic",     want:20, group:"Arithmetic"},
-  {key:"lang",  name:"Language",       want:4,  group:"Language", passages:true}
+  {key:"mat",   name:"Mental Ability", want:20, group:"Mental Ability & EVS", color:"#8b5cf6", icon:"🧩"},
+  {key:"evs",   name:"EVS",            want:20, group:"Mental Ability & EVS", color:"#16a34a", icon:"🌱"},
+  {key:"arith", name:"Arithmetic",     want:20, group:"Arithmetic",           color:"#2563eb", icon:"➗"},
+  {key:"lang",  name:"Language",       want:4,  group:"Language", passages:true, color:"#f97316", icon:"📖"}
 ];
 
 const store = {
@@ -348,7 +363,7 @@ function renderHome(){
     const n = s.passages ? pool.slice(0,s.want).reduce((a,p)=>a+p.qs.length,0) : Math.min(pool.length,s.want);
     total += n;
     const poolTxt = s.key==="mat" ? "new figures every time" : s.passages ? pool.length+" passages in bank" : pool.length+" in bank";
-    list.insertAdjacentHTML("beforeend",'<div class="sec'+(n?'':' off')+'"><b>'+s.name+'</b><span class="small">'+(n?n+" questions · "+poolTxt:"No questions yet")+'</span></div>');
+    list.insertAdjacentHTML("beforeend",'<div class="sec'+(n?'':' off')+'" style="--c:'+s.color+'"><span class="si">'+s.icon+'</span><b>'+s.name+'</b><span class="small">'+(n?n+" questions · "+poolTxt:"No questions yet")+'</span></div>');
   });
   const mins = Math.round(total*MIN_PER_Q);
   $("testInfo").textContent = total
@@ -470,7 +485,7 @@ function renderQuizSetup(){
   $("qChips").innerHTML = SECTIONS.map(s=>{
     const ok=hasQs(s), on=ok&&quizSel.includes(s.key);
     const info = !ok ? "No questions yet" : s.key==="mat" ? "New figures every time" : s.passages ? poolFor(s).length+" passages" : poolFor(s).length+" in bank";
-    return '<button class="chip'+(on?' on':'')+'" data-k="'+s.key+'"'+(ok?'':' disabled')+'><span class="box">'+(on?'✓':'')+'</span><span>'+s.name+'<small>'+info+'</small></span></button>';
+    return '<button class="chip'+(on?' on':'')+'" style="--c:'+s.color+'" data-k="'+s.key+'"'+(ok?'':' disabled')+'><span class="box">'+(on?'✓':'')+'</span><span>'+s.icon+' '+s.name+'<small>'+info+'</small></span></button>';
   }).join("");
   $("qChips").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
     const k=b.dataset.k; quizSel = quizSel.includes(k) ? quizSel.filter(x=>x!==k) : quizSel.concat(k);
@@ -557,7 +572,8 @@ function renderQ(){
   } else pb.innerHTML="";
   $("qtext").textContent=(T.cur+1)+". "+q.q;
   $("qfig").innerHTML = q.fig || ""; $("qfig").classList.toggle("hidden",!q.fig);
-  $("secLabel").textContent = q.sec.name + (q.gen ? " · "+q.part : (/^\d{4}/.test(q.src||"") ? " · JNVST "+q.src : ""));
+  const extra = q.gen ? q.part : (/^\d{4}/.test(q.src||"") ? "JNVST "+q.src : "");
+  $("secLabel").innerHTML = '<span class="secbadge" style="--c:'+q.sec.color+'"><i>'+q.sec.icon+'</i>'+esc(q.sec.name)+'</span>'+(extra?' <span class="small" style="text-transform:none;letter-spacing:0">· '+esc(extra)+'</span>':'');
   const im=$("qimg");
   if(q.img){im.src=imgURL(q.img);im.classList.remove("hidden")} else {im.removeAttribute("src");im.classList.add("hidden")}
   const box=$("opts"); box.innerHTML=""; box.classList.toggle("figs",!!q.gen);
@@ -579,8 +595,8 @@ function renderGrids(){
   T.qs.forEach((q,i)=>{
     if(q.sec!==lastSec){
       lastSec=q.sec;
-      g.insertAdjacentHTML("beforeend",'<div class="gridhead">'+q.sec.name+'</div>');
-      grid=document.createElement("div"); grid.className="grid"; g.appendChild(grid);
+      g.insertAdjacentHTML("beforeend",'<div class="gridhead" style="color:'+q.sec.color+'">'+q.sec.icon+' '+q.sec.name+'</div>');
+      grid=document.createElement("div"); grid.className="grid"; grid.style.setProperty("--c",q.sec.color); g.appendChild(grid);
     }
     const b=document.createElement("button");
     b.textContent=i+1;
@@ -628,7 +644,8 @@ function finish(timeUp){
     const max=g.n*MARK, marks=g.c*MARK, need=Math.round(max*PASS_SHARE*100)/100, pass=marks>=need;
     allPass=allPass&&pass; totC+=g.c; totN+=g.n;
     parts.push({name,c:g.c,n:g.n,pass});
-    tiles.insertAdjacentHTML("beforeend",'<div class="tile '+(pass?"pass":"fail")+'"><div class="k">'+name+'</div><div class="v">'+fmt(marks)+' / '+fmt(max)+'</div><div class="small">'+g.c+' of '+g.n+' correct · pass mark '+need+' <span class="tag '+(pass?"pass":"fail")+'">'+(pass?"PASS":"BELOW")+'</span></div></div>');
+    const gcol = ({"Mental Ability & EVS":"#8b5cf6","Arithmetic":"#2563eb","Language":"#f97316"})[name]||"#4f46e5";
+    tiles.insertAdjacentHTML("beforeend",'<div class="tile '+(pass?"pass":"fail")+'" style="border-top:5px solid '+gcol+'"><div class="k" style="color:'+gcol+'">'+name+'</div><div class="v">'+fmt(marks)+' / '+fmt(max)+'</div><div class="small">'+g.c+' of '+g.n+' correct · pass mark '+need+' <span class="tag '+(pass?"pass":"fail")+'">'+(pass?"PASS":"BELOW")+'</span></div></div>');
   });
   tiles.insertAdjacentHTML("beforeend",'<div class="tile"><div class="k">Total</div><div class="v">'+fmt(totC*MARK)+' / '+fmt(totN*MARK)+'</div><div class="small">Time used '+Math.floor(used/60)+'m '+used%60+'s of '+T.total/60+'m</div></div>');
   $("resTitle").textContent = timeUp ? "Time's up!" : (allPass ? "Well done!" : "Keep practising");
@@ -660,7 +677,16 @@ function finish(timeUp){
   show("result"); window.scrollTo(0,0);
 }
 
+function renderLast(){
+  const h0 = history[0], el = $("lastCard");
+  if(!h0){ el.classList.add("hidden"); return; }
+  const d = new Date(h0.d).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+  el.innerHTML = '<b>Last result</b> <span class="small">· '+(h0.kind==="quiz"?"Quick quiz":"Full test")+', '+d+'</span>'+
+    '<div class="row"><span class="big-score">'+fmt(h0.marks)+'<span>/'+fmt(h0.max)+'</span></span><span class="tag '+(h0.pass?"pass":"fail")+'">'+(h0.pass?"PASS":"KEEP GOING")+'</span></div>';
+  el.classList.remove("hidden");
+}
 function renderHistory(){
+  renderLast();
   if(!history.length) return;
   $("history").innerHTML='<table class="hist"><tr><th>Date</th><th>Marks</th><th>Sections</th><th>Time</th></tr>'+
     history.map(h=>{
@@ -692,6 +718,7 @@ function track(event, details, score){
 function greet(){
   if(!profile) return;
   $("hello").textContent = "Hi " + profile.name + " 👋";
+  $("helloSub").textContent = "Ready for today's practice?";
   $("histHead").textContent = "Hi " + profile.name + ", here's your practice history";
 }
 function openWelcome(){
