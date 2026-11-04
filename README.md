@@ -1,4 +1,4 @@
-# Lakshya Navodaya (by Manu)
+# Target Navodaya (by Manu)
 
 Timed practice tests for the JNVST Class 6 entrance exam (Jawahar Navodaya Vidyalaya).
 

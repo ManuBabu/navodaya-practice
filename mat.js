@@ -1,4 +1,4 @@
-/* Lakshya Navodaya: Mental Ability question maker.
+/* Target Navodaya: Mental Ability question maker.
    Draws JNVST-style figure questions and knows each answer because it builds them:
    the right option is a known flip or turn of the figure, and wrong options are other flips and turns. */
 (function (global) {
