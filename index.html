@@ -487,7 +487,7 @@ function startPaper(qs,kind,minutes){
   if(!qs.length) return;
   const total = (minutes || Math.round(qs.length*MIN_PER_Q))*60;
   T={qs,kind,ans:new Array(qs.length).fill(null),cur:0,total,started:Date.now()};
-  store.set("nv_live",{started:T.started});
+  saveLive();
   show("test"); renderGrids(); renderQ(); tick();
   clearInterval(timerId); timerId=setInterval(tick,1000);
   window.scrollTo(0,0);
@@ -495,6 +495,30 @@ function startPaper(qs,kind,minutes){
 
 /* ---------- test screen ---------- */
 function show(id){["home","quiz","test","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id))}
+/* ---------- keep the test safe if the phone closes the app ---------- */
+function saveLive(){
+  if(!T) return;
+  store.set("nv_live",{kind:T.kind,total:T.total,started:T.started,cur:T.cur,ans:T.ans,
+    qs:T.qs.map(q=>({...q,sec:q.sec.key,passage:q.passage?{id:q.passage.id,title:q.passage.title,text:q.passage.text}:null}))});
+}
+function resumeLive(){
+  const L = store.get("nv_live",null);
+  if(!L || !Array.isArray(L.qs) || !L.qs.length) return false;
+  const secs = Object.fromEntries(SECTIONS.map(s=>[s.key,s])), passages = {};
+  const qs = L.qs.map(q=>{
+    const p = q.passage ? (passages[q.passage.id] = passages[q.passage.id] || q.passage) : null;   // share one passage object
+    return {...q, sec:secs[q.sec]||SECTIONS[0], passage:p};
+  });
+  T = {qs,kind:L.kind,ans:L.ans,cur:Math.min(L.cur||0,qs.length-1),total:L.total,started:L.started};
+  // the timer kept running while the app was closed, just like in the exam hall
+  if(Date.now()-T.started >= T.total*1000){ finish(true); return true; }
+  show("test"); renderGrids(); renderQ(); tick();
+  clearInterval(timerId); timerId=setInterval(tick,1000);
+  return true;
+}
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) saveLive(); else if(T) tick(); });
+window.addEventListener("pagehide",saveLive);
+
 function renderQ(){
   const q=T.qs[T.cur];
   $("prog").textContent="Q "+(T.cur+1)+" of "+T.qs.length;
@@ -520,6 +544,7 @@ function renderQ(){
   $("prevBtn").disabled=T.cur===0;
   $("nextBtn").textContent=T.cur===T.qs.length-1?"Finish":"Next →";
   renderGrids();
+  saveLive();
 }
 function renderGrids(){
   const g=$("grids"); g.innerHTML="";
@@ -639,6 +664,7 @@ $("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.promp
 if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
 
 renderHistory();
+resumeLive();
 load();
 </script>
 </body>
